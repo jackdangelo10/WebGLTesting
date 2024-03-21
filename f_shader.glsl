@@ -7,7 +7,7 @@ out vec4 out_color; // the color of the fragment to be output
 
 void main() 
 {
-  out_color = v_color; // set the color of the fragment to the color of the vertex
+    out_color = v_color; // set the color of the fragment to the color of the vertex
 }
 
 
