@@ -1,5 +1,7 @@
 "use strict";
 
+var simplex = new SimplexNoise();
+
 function main()
 {
     // retrieve shader glsl files
@@ -143,7 +145,7 @@ function set_geometry(gl)
 
     while(radius > 1)
     {
-        radius = ratio * noise(angle);
+        radius = ratio * simplex.noise1D(angle);
 
         const x = Math.cos(angle) * radius;
         const y = Math.sin(angle) * radius;
