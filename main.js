@@ -49,6 +49,11 @@ async function main()
 
     // set up program
     const program = createProgramFromSources(gl, v_shader, f_shader); // create program from shaders
+    if(program == null)
+    {
+        console.log("Error: Program not created");
+        return;
+    }
 
     // look up where the vertex data needs to go.
     const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
@@ -61,13 +66,33 @@ async function main()
 
     // create set of attributes
     const vao = gl.createVertexArray(); // create vertex array object; contains vertex data, buffer objects, index buffer objects...
+    if (!vao) 
+    {
+        console.error('Failed to create vertex array object (VAO).');
+        return;
+    }
+
     gl.bindVertexArray(vao); // bind vertex array object
 
     // create buffer
     const positionBuffer = gl.createBuffer(); // create buffer
+    if (!positionBuffer) 
+    {
+        console.error('Failed to create buffer object.');
+        return;
+    }
+
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer); // bind buffer
 
-    
+    // final error check
+    const error = gl.getError();
+    if (error !== gl.NO_ERROR) 
+    {
+        console.error('WebGL Error occurred:', error);
+        gl.deleteBuffer(positionBuffer);
+        gl.deleteVertexArray(vao);
+        return;
+    }
     
     let intervalId = setInterval(() => 
     {
@@ -98,6 +123,12 @@ function drawScene(gl, program, vao, canvas, count)
 
     // set the resolution uniform (after resizing the canvas and after useProgram)
     const canvasSizeLocation = gl.getUniformLocation(program, "u_resolution");
+    if(canvasSizeLocation == null)
+    {
+        console.log("Error: Uniform not found");
+        return;
+    }
+
     gl.uniform2f(canvasSizeLocation, canvas.width, canvas.height);
 
     // bind vertex array object
@@ -143,6 +174,7 @@ function loadData(gl, positionAttributeLocation)
     gl.enableVertexAttribArray(positionAttributeLocation);
     // draw
     console.log("Count: " + count);
+
 
     return count
 }
