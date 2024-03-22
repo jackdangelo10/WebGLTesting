@@ -1,7 +1,5 @@
 "use strict";
 
-var simplex = new SimplexNoise();
-
 try
 {
     main();
@@ -35,8 +33,13 @@ async function main()
 
     // get canvas
     const canvas = document.querySelector("#webglCanvas");
-    const gl = canvas.getContext("webgl2");
+    if(!canvas)
+    {
+        console.log("Error: Canvas not found");
+        return;
+    }
 
+    const gl = canvas.getContext("webgl2");
     if (!gl)
     {
         console.log("WebGL2 not supported");
@@ -49,6 +52,12 @@ async function main()
 
     // look up where the vertex data needs to go.
     const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+    if(positionAttributeLocation == -1)
+    {
+        console.log("Error: Attribute not found");
+        return;
+    }
+    console.log("Attribute location: " + positionAttributeLocation);
 
     // create set of attributes
     const vao = gl.createVertexArray(); // create vertex array object; contains vertex data, buffer objects, index buffer objects...
@@ -58,20 +67,13 @@ async function main()
     const positionBuffer = gl.createBuffer(); // create buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer); // bind buffer
 
-    // set up geometry
-    const count = set_geometry(gl);
-
-    // tell position attribute how to get data out of position buffer
-    const size = 2; // 2 components per iteration
-    const type = gl.FLOAT; // data is 32bit floats
-    const normalize = false; // don't normalize the data
-    const stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position, mostly used for interleaved data
-    const offset = 0; // start at the beginning of the buffer
-    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset); // turn on the attribute
-    // draw
-    console.log("Count: " + count);
-    drawScene(gl, program, vao, canvas, count);
-
+    
+    
+    let intervalId = setInterval(() => 
+    {
+        const count = loadData(gl, positionAttributeLocation);
+        drawScene(gl, program, vao, canvas, count);
+    }, 100);
 }
 
 function drawScene(gl, program, vao, canvas, count)
@@ -84,26 +86,30 @@ function drawScene(gl, program, vao, canvas, count)
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height); // set viewport; area of canvas to draw to
 
 
-
+    console.log("Viewport set");
 
     // Clear the canvas
-    gl.clearColor(0, 0, 0, 0);
+    gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    console.log("Canvas cleared");
 
     gl.useProgram(program); // use program
+    console.log("Program set")
 
-    // uniform resolution
-    const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
-    gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+    // set the resolution uniform (after resizing the canvas and after useProgram)
+    const canvasSizeLocation = gl.getUniformLocation(program, "u_resolution");
+    gl.uniform2f(canvasSizeLocation, canvas.width, canvas.height);
 
     // bind vertex array object
     gl.bindVertexArray(vao);
+    console.log("Vertex array object set");
 
     const offset = 0;
     gl.drawArrays(gl.LINE_STRIP, offset, count); // parameters: mode, first, count
+    console.log("Drawn");
 }
 
-// write functino to resize the canvas to display size
+// write function to resize the canvas to display size
 
 function resizeCanvasToDisplaySize(canvas)
 {
@@ -119,4 +125,24 @@ function resizeCanvasToDisplaySize(canvas)
     }
 
     return needResize;
+}
+
+
+function loadData(gl, positionAttributeLocation)
+{
+    // set up geometry
+    const count = set_geometry(gl);
+
+    // tell position attribute how to get data out of position buffer
+    const size = 2; // 2 components per iteration
+    const type = gl.FLOAT; // data is 32bit floats
+    const normalize = false; // don't normalize the data
+    const stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position, mostly used for interleaved data
+    const offset = 0; // start at the beginning of the buffer
+    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset); // turn on the attribute
+    gl.enableVertexAttribArray(positionAttributeLocation);
+    // draw
+    console.log("Count: " + count);
+
+    return count
 }

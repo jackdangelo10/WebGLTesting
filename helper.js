@@ -4,22 +4,23 @@ function set_geometry(gl)
     const positions = [];
 
     // necessary variables
-    let ratio = Math.random() * 200 + 100;
+    let ratio = 3000;
     let angle = Math.random() * Math.PI * 2;
     let radius = 2;
 
     let count = 0;
     while(radius > 1)
     {
-        radius = ratio * simplex.noise2D(angle,0);
+        radius = ratio;
 
         const x = Math.cos(angle) * radius;
         const y = Math.sin(angle) * radius;
+        console.log(x, y);
 
         positions.push(x, y);
 
-        ratio *= 0.99;
-        angle += .01;
+        ratio *= .99;
+        angle += .1 * Math.random() - .05;
         count++;
     }
 
